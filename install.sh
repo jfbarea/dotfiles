@@ -304,6 +304,16 @@ safe_stow claudeconfig
 chmod +x "$DOTFILES/claudeconfig/.claude/hooks/"*.sh 2>/dev/null || true
 ok "Claude hooks made executable"
 
+# Switch dotfiles remote from HTTPS to SSH if needed
+remote_url="$(git -C "$DOTFILES" remote get-url origin 2>/dev/null || true)"
+if [[ "$remote_url" == https://github.com/* ]]; then
+  ssh_url="git@github.com:${remote_url#https://github.com/}"
+  git -C "$DOTFILES" remote set-url origin "$ssh_url"
+  ok "Switched dotfiles remote to SSH: $ssh_url"
+else
+  ok "Dotfiles remote already uses SSH"
+fi
+
 # CLAUDE.md template — copy to ~/src/ only if it doesn't exist yet
 if [[ -d "$HOME/src" && ! -f "$HOME/src/CLAUDE.md" ]]; then
   cp "$DOTFILES/templates/CLAUDE.md" "$HOME/src/CLAUDE.md"
