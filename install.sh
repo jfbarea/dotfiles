@@ -156,6 +156,59 @@ install_linux_extras() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Oh My Zsh
+# ─────────────────────────────────────────────────────────────────────────────
+
+install_omz() {
+  # Install oh-my-zsh without changing shell or opening a new shell
+  if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    step "Installing oh-my-zsh..."
+    RUNZSH=no CHSH=no sh -c \
+      "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    ok "oh-my-zsh installed"
+  else
+    ok "oh-my-zsh already installed"
+  fi
+
+  local custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+
+  # zsh-autosuggestions
+  if [[ ! -d "$custom/plugins/zsh-autosuggestions" ]]; then
+    step "Installing zsh-autosuggestions..."
+    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions \
+      "$custom/plugins/zsh-autosuggestions"
+    ok "zsh-autosuggestions installed"
+  else
+    ok "zsh-autosuggestions already installed"
+  fi
+
+  # zsh-syntax-highlighting
+  if [[ ! -d "$custom/plugins/zsh-syntax-highlighting" ]]; then
+    step "Installing zsh-syntax-highlighting..."
+    git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting \
+      "$custom/plugins/zsh-syntax-highlighting"
+    ok "zsh-syntax-highlighting installed"
+  else
+    ok "zsh-syntax-highlighting already installed"
+  fi
+
+  # Set zsh as default shell
+  local zsh_path
+  zsh_path="$(command -v zsh)"
+  if [[ "$SHELL" != "$zsh_path" ]]; then
+    step "Setting zsh as default shell..."
+    if grep -qx "$zsh_path" /etc/shells; then
+      chsh -s "$zsh_path"
+      ok "Default shell set to $zsh_path (takes effect on next login)"
+    else
+      warn "$zsh_path not in /etc/shells — add it manually and run: chsh -s $zsh_path"
+    fi
+  else
+    ok "zsh is already the default shell"
+  fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Symlink helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -217,6 +270,9 @@ else
   install_packages_linux
 fi
 
+step "Installing oh-my-zsh and plugins..."
+install_omz
+
 step "Symlinking dotfiles..."
 
 # git (.gitconfig, .gitignore_global → $HOME)
@@ -224,6 +280,9 @@ safe_stow git
 
 # nvim (keep manual symlink — avoids restructuring the nvim/ directory)
 safe_link "$DOTFILES/nvim" "$HOME/.config/nvim"
+
+# zsh (.zshrc → $HOME) — stow after omz so it overwrites the generated .zshrc
+safe_stow zsh
 
 # Claude Code (settings.json, hooks/ → $HOME/.claude/)
 mkdir -p "$HOME/.claude/hooks"
@@ -243,10 +302,10 @@ echo ""
 echo -e "${GRN}✓ Dotfiles installed successfully!${RST}"
 echo ""
 echo "  Next steps:"
-echo "  1. Add to your shell profile (~/.zshrc or ~/.bashrc):"
+echo "  1. Add to ~/.zshrc (before the starship eval):"
 echo "       export NTFY_TOPIC=sabes-que-notificación   # Claude Code notifications"
-echo "       export PATH=\"\$HOME/.local/bin:\$PATH\"       # bat, fd symlinks (Linux)"
-echo "  2. Launch nvim — lazy.nvim will install plugins on first run"
-echo "  3. Edit ~/src/CLAUDE.md to customize for your projects"
+echo "  2. Log out and back in so zsh becomes the active shell"
+echo "  3. Launch nvim — lazy.nvim will install plugins on first run"
+echo "  4. Edit ~/src/CLAUDE.md to customize for your projects"
 [[ -n "${BACKUP_DIR:-}" && -d "${BACKUP_DIR:-}" ]] && \
   echo "  4. Backups of replaced files: $BACKUP_DIR"
