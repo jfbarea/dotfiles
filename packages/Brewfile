@@ -18,6 +18,7 @@ brew "gnu-coreutils"   # gls, gcat, … sin el prefijo g con PATH ajustado
 brew "fd"              # fast find — lo usa nvim-telescope
 brew "gh"              # GitHub CLI
 brew "wget"
+brew "zsh"
 brew "zoxide"          # cd inteligente con historial
 brew "mise"            # gestor de versiones de runtimes (node, python, ruby…)
 brew "htop"

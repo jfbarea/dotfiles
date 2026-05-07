@@ -1,5 +1,6 @@
 # Required
 git
+zsh
 tmux
 fzf
 ripgrep
