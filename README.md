@@ -1,33 +1,18 @@
 # dotfiles
 
-Configuración portable de Neovim, pensada para arrancar rápido en cualquier máquina nueva.
+Configuración portable para arrancar una máquina nueva en minutos.
 
-## Stack
+## Qué incluye
 
-- **lazy.nvim** — gestor de plugins (se auto-instala en el primer arranque)
-- **Mason + nvim-lspconfig** — LSP para TypeScript, Python y Lua
-- **Telescope** — fuzzy finder de ficheros y texto
-- **Treesitter** — syntax highlighting moderno
-- **nvim-cmp** — autocompletado
-- **oil.nvim** — explorador de ficheros (edita directorios como buffers)
-- **tokyonight** — tema
+| Bloque | Descripción |
+|---|---|
+| **nvim/** | Neovim con lazy.nvim, LSP, Telescope, Treesitter, nvim-cmp |
+| **git/** | `.gitconfig` con aliases, delta como pager, opciones de pull/push |
+| **claude/** | `settings.json` de Claude Code + hook Stop con notificación ntfy.sh |
+| **packages/** | `Brewfile` (macOS) y `apt-packages.txt` (Linux/Raspberry Pi) |
+| **templates/** | Plantilla global `CLAUDE.md` para proyectos |
 
-## Requisitos
-
-- Neovim ≥ 0.10
-- git
-- ripgrep (`rg`) — necesario para `live_grep` de Telescope
-- fd — recomendado para `find_files` de Telescope
-- Node.js — necesario para los LSP de TypeScript/JavaScript
-- Python ≥ 3.10 — necesario para Pyright
-
-En macOS:
-
-```bash
-brew install neovim ripgrep fd node python
-```
-
-## Instalación
+## Instalación en una máquina nueva
 
 ```bash
 git clone https://github.com/TU_USUARIO/dotfiles.git ~/dotfiles
@@ -35,64 +20,127 @@ cd ~/dotfiles
 ./install.sh
 ```
 
-El script enlaza `nvim/` a `~/.config/nvim`. Si ya tenías una config previa, se hace backup automático con timestamp.
+El script se encarga de todo:
 
-Al lanzar `nvim` por primera vez, lazy.nvim instala todos los plugins. Mason instala los LSP la primera vez que abras un fichero del lenguaje correspondiente.
+1. **Detecta el SO** (`uname -s`): macOS o Linux/Debian/Raspbian
+2. **Instala paquetes**
+   - macOS: instala Homebrew si falta, luego `brew bundle`
+   - Linux: `apt-get` + binarios de GitHub Releases para lo que no está en apt
+     (neovim, git-delta, lazygit, eza, starship)
+3. **Crea los symlinks**
+   - `~/.gitconfig`, `~/.gitignore_global` vía GNU stow
+   - `~/.config/nvim/` → symlink directo a `nvim/`
+   - `~/.claude/settings.json` y `~/.claude/hooks/` vía stow
+4. **Backup automático** — si un archivo de destino ya existe y no es un symlink al repo, lo mueve a `~/.dotfiles-backup/<timestamp>/` antes de reemplazarlo
+5. **Idempotente** — ejecutarlo dos veces no rompe nada ni duplica symlinks
 
-## Atajos principales
+### Post-instalación
 
-Leader es `Espacio`.
+Añade estas líneas a tu `~/.zshrc` o `~/.bashrc`:
 
-### Ficheros
-- `<leader>ff` — buscar fichero
-- `<leader>fg` — buscar texto en proyecto (live grep)
-- `<leader>fb` — buscar buffer abierto
-- `<leader>fr` — ficheros recientes
-- `-` — abrir explorador en directorio actual (oil)
+```bash
+# Claude Code — notificaciones al terminar sesión
+export NTFY_TOPIC=tu-topic-de-ntfy
 
-### Edición
-- `<leader>w` — guardar
-- `<leader>q` — salir
-- `<leader>p` — pegar sin sobrescribir el registro
-- `gcc` — comentar línea (`gc` en visual)
+# Linux: symlinks de bat y fd creados por install.sh
+export PATH="$HOME/.local/bin:$PATH"
 
-### LSP (al abrir un fichero con servidor activo)
-- `gd` — ir a definición
-- `gr` — ver referencias
-- `K` — hover (documentación)
-- `<leader>rn` — renombrar símbolo
-- `<leader>ca` — code action
-- `[d` / `]d` — diagnóstico anterior / siguiente
+# Starship prompt (si no está ya)
+eval "$(starship init bash)"   # o zsh
+```
 
-### Ventanas
-- `<C-h/j/k/l>` — moverse entre splits
+Luego abre `nvim` — lazy.nvim instala los plugins en el primer arranque.
 
-## Estructura
+---
+
+## Paquetes instalados
+
+### Requeridos (en ambas plataformas)
+
+`git` · `git-delta` · `lazygit` · `tmux` · `neovim` · `fzf` · `ripgrep` · `bat` · `eza` · `starship` · `jq` · `stow` · `node` · `gnu-coreutils` (macOS)
+
+### Recomendados (marcados en los archivos de paquetes)
+
+`fd` · `gh` (GitHub CLI) · `wget` · `zoxide` · `mise` · `htop` · `tldr` · `tree`
+
+---
+
+## Configuración de Git
+
+Aliases disponibles:
+
+| Alias | Comando real |
+|---|---|
+| `git st` | `status -sb` |
+| `git co` | `checkout` |
+| `git br` | `branch -v` |
+| `git lg` | log gráfico con todas las ramas |
+| `git last` | último commit con stats |
+| `git undo` | deshace el último commit (conserva cambios) |
+
+Delta muestra diffs en modo side-by-side con números de línea.
+
+---
+
+## Hook de notificación (Claude Code)
+
+Cuando termina una sesión de Claude Code, `~/.claude/hooks/notify-stop.sh` envía una notificación a [ntfy.sh](https://ntfy.sh).
+
+Requisito: tener `NTFY_TOPIC` exportado en el entorno.
+
+---
+
+## Plantilla CLAUDE.md
+
+`templates/CLAUDE.md` es una plantilla comentada para colocar en `~/src/CLAUDE.md`. Claude Code la carga automáticamente para todos tus proyectos bajo `~/src/`. `install.sh` la copia si `~/src/` existe y no hay ya un `CLAUDE.md`.
+
+---
+
+## Estructura del repo
 
 ```
 dotfiles/
-├── README.md
+├── git/
+│   ├── .gitconfig
+│   └── .gitignore_global
+├── nvim/
+│   ├── init.lua
+│   └── lua/
+│       ├── config/        # options, keymaps, lazy bootstrap
+│       └── plugins/       # un fichero por categoría
+├── claude/
+│   └── .claude/
+│       ├── settings.json
+│       └── hooks/
+│           └── notify-stop.sh
+├── templates/
+│   └── CLAUDE.md
+├── packages/
+│   ├── Brewfile
+│   └── apt-packages.txt
 ├── install.sh
-└── nvim/
-    ├── init.lua              # entry point
-    └── lua/
-        ├── config/
-        │   ├── options.lua   # opciones de vim
-        │   ├── keymaps.lua   # atajos generales
-        │   └── lazy.lua      # bootstrap del gestor de plugins
-        └── plugins/          # un fichero por categoría
-            ├── colorscheme.lua
-            ├── telescope.lua
-            ├── treesitter.lua
-            ├── lsp.lua
-            ├── completion.lua
-            ├── editor.lua
-            └── ui.lua
+└── README.md
 ```
 
-## Cómo extenderlo
+## Atajos principales de Neovim
 
-Para añadir un plugin nuevo, crea un fichero en `nvim/lua/plugins/`:
+Leader es `Espacio`.
+
+| Atajo | Acción |
+|---|---|
+| `<leader>ff` | Buscar fichero |
+| `<leader>fg` | Buscar texto en proyecto |
+| `<leader>fb` | Buscar buffer abierto |
+| `-` | Explorador de ficheros (oil.nvim) |
+| `gd` | Ir a definición (LSP) |
+| `gr` | Ver referencias (LSP) |
+| `K` | Documentación hover |
+| `<leader>rn` | Renombrar símbolo |
+| `<C-h/j/k/l>` | Moverse entre splits |
+
+## Añadir un plugin de Neovim
+
+Crea un fichero en `nvim/lua/plugins/`:
 
 ```lua
 return {
@@ -104,23 +152,4 @@ return {
 }
 ```
 
-`lazy.nvim` los descubre automáticamente gracias al `import = "plugins"` en `lazy.lua`.
-
-## Ideas para más adelante
-
-- **conform.nvim** + **nvim-lint** — formateo (Prettier, Black, stylua) y linters al guardar
-- **nvim-dap** — debugger integrado
-- **flash.nvim** — saltos rápidos al estilo easymotion
-- Mover `~/.config/zsh`, `~/.config/git`, `~/.tmux.conf`, etc. a este mismo repo y extender `install.sh` para enlazar todo
-
-## Crear el repo
-
-Desde el directorio descomprimido:
-
-```bash
-cd ~/dotfiles
-git init
-git add .
-git commit -m "init: configuración base de Neovim"
-gh repo create dotfiles --public --source=. --remote=origin --push
-```
+lazy.nvim lo descubre automáticamente.
