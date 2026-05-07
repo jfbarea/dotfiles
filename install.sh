@@ -300,8 +300,8 @@ safe_stow zsh
 
 # Claude Code (settings.json, hooks/ → $HOME/.claude/)
 mkdir -p "$HOME/.claude/hooks"
-safe_stow claude
-chmod +x "$DOTFILES/claude/.claude/hooks/"*.sh 2>/dev/null || true
+safe_stow claudeconfig
+chmod +x "$DOTFILES/claudeconfig/.claude/hooks/"*.sh 2>/dev/null || true
 ok "Claude hooks made executable"
 
 # CLAUDE.md template — copy to ~/src/ only if it doesn't exist yet
