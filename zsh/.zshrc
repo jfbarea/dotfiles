@@ -6,7 +6,6 @@ plugins=(
   git
   fzf
   zsh-autosuggestions
-  zsh-syntax-highlighting
 )
 
 source "$ZSH/oh-my-zsh.sh"
@@ -45,3 +44,5 @@ fi
 if command -v starship &>/dev/null; then
   eval "$(starship init zsh)"
 fi
+# ── NTFY ──────────────────────────────────────────────────────────────────
+export NTFY_TOPIC=sabes-que-notificacion   # Claude Code notifications
