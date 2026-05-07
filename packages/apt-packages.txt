@@ -1,0 +1,27 @@
+# Required
+git
+tmux
+fzf
+ripgrep
+bat
+jq
+stow
+nodejs
+npm
+curl
+wget
+
+# Recommended
+fd-find
+gh
+zoxide
+htop
+tldr
+tree
+
+# Notes — installed from GitHub Releases by install.sh (not in apt or outdated):
+#   neovim    — apt version is typically too old; install.sh fetches latest tarball
+#   git-delta — .deb from https://github.com/dandavison/delta/releases
+#   lazygit   — tarball from https://github.com/jesseduffield/lazygit/releases
+#   eza       — tarball from https://github.com/eza-community/eza/releases
+#   starship  — install script from https://starship.rs/install.sh

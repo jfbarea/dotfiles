@@ -1,0 +1,26 @@
+# ── Required ──────────────────────────────────────────────────────────────────
+brew "git"
+brew "git-delta"
+brew "lazygit"
+brew "tmux"
+brew "neovim"
+brew "fzf"
+brew "ripgrep"
+brew "bat"
+brew "eza"
+brew "starship"
+brew "jq"
+brew "stow"
+brew "node"
+brew "gnu-coreutils"   # gls, gcat, … sin el prefijo g con PATH ajustado
+
+# ── Recommended ───────────────────────────────────────────────────────────────
+brew "fd"              # fast find — lo usa nvim-telescope
+brew "gh"              # GitHub CLI
+brew "wget"
+brew "zoxide"          # cd inteligente con historial
+brew "mise"            # gestor de versiones de runtimes (node, python, ruby…)
+brew "htop"
+brew "tldr"            # man pages simplificadas
+brew "tree"
+brew "curl"
