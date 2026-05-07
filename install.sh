@@ -232,10 +232,13 @@ backup_if_needed() {
   if [[ -L "$dst" ]]; then
     local current_target
     current_target="$(readlink "$dst")"
-    if [[ "$current_target" == "$src" ]]; then
-      return 0   # already correct
+    # Accept only relative symlinks that resolve to src (what stow creates).
+    # Absolute symlinks confuse stow's ownership check even when they point to
+    # the right file — remove them so stow can recreate them as relative.
+    if [[ "$current_target" != /* && "$(readlink -f "$dst" 2>/dev/null)" == "$src" ]]; then
+      return 0   # already a correct relative symlink
     fi
-    warn "Replacing stale symlink: $dst → $current_target"
+    warn "Replacing stale/absolute symlink: $dst → $current_target"
     rm "$dst"
   elif [[ -e "$dst" ]]; then
     local rel="${dst#"$HOME/"}"
@@ -274,62 +277,107 @@ safe_link() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Error-resilient step runner
+# ─────────────────────────────────────────────────────────────────────────────
+
+FAILURES=()
+
+# run_step NAME CMD [ARGS…]
+# Runs CMD in an isolated subshell with errexit; on failure records the name
+# and continues so the rest of the installation proceeds regardless.
+run_step() {
+  local name="$1"; shift
+  if ( set -euo pipefail; "$@" ); then
+    return 0
+  else
+    err "Step '$name' failed — continuing..."
+    FAILURES+=("$name")
+    return 0
+  fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Helpers for steps that contain inline logic
+# ─────────────────────────────────────────────────────────────────────────────
+
+setup_claude() {
+  mkdir -p "$HOME/.claude/hooks"
+  safe_stow claudeconfig
+  chmod +x "$DOTFILES/claudeconfig/.claude/hooks/"*.sh 2>/dev/null || true
+  ok "Claude hooks made executable"
+}
+
+switch_dotfiles_remote() {
+  local remote_url
+  remote_url="$(git -C "$DOTFILES" remote get-url origin 2>/dev/null || true)"
+  if [[ "$remote_url" == https://github.com/* ]]; then
+    local ssh_url="git@github.com:${remote_url#https://github.com/}"
+    git -C "$DOTFILES" remote set-url origin "$ssh_url"
+    ok "Switched dotfiles remote to SSH: $ssh_url"
+  else
+    ok "Dotfiles remote already uses SSH"
+  fi
+}
+
+copy_claude_template() {
+  if [[ -d "$HOME/src" && ! -f "$HOME/src/CLAUDE.md" ]]; then
+    cp "$DOTFILES/templates/CLAUDE.md" "$HOME/src/CLAUDE.md"
+    ok "CLAUDE.md template copied to ~/src/"
+  elif [[ ! -d "$HOME/src" ]]; then
+    warn "~/src/ not found — CLAUDE.md template not copied (run: cp $DOTFILES/templates/CLAUDE.md ~/src/CLAUDE.md)"
+  fi
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Main
 # ─────────────────────────────────────────────────────────────────────────────
 
 step "Installing packages..."
 if [[ "$PLATFORM" == "macos" ]]; then
-  install_packages_macos
+  run_step "packages" install_packages_macos
 else
-  install_packages_linux
+  run_step "packages" install_packages_linux
 fi
 
 step "Installing oh-my-zsh and plugins..."
-install_omz
+run_step "oh-my-zsh" install_omz
 
 step "Symlinking dotfiles..."
 
 # git (.gitconfig, .gitignore_global → $HOME)
-safe_stow git
+run_step "stow:git"   safe_stow git
 
 # nvim (keep manual symlink — avoids restructuring the nvim/ directory)
-safe_link "$DOTFILES/nvim" "$HOME/.config/nvim"
+run_step "link:nvim"  safe_link "$DOTFILES/nvim" "$HOME/.config/nvim"
 
 # zsh (.zshrc → $HOME) — stow after omz so it overwrites the generated .zshrc
-safe_stow zsh
+run_step "stow:zsh"   safe_stow zsh
 
 # Claude Code (settings.json, hooks/ → $HOME/.claude/)
-mkdir -p "$HOME/.claude/hooks"
-safe_stow claudeconfig
-chmod +x "$DOTFILES/claudeconfig/.claude/hooks/"*.sh 2>/dev/null || true
-ok "Claude hooks made executable"
+run_step "stow:claude" setup_claude
 
 # Switch dotfiles remote from HTTPS to SSH if needed
-remote_url="$(git -C "$DOTFILES" remote get-url origin 2>/dev/null || true)"
-if [[ "$remote_url" == https://github.com/* ]]; then
-  ssh_url="git@github.com:${remote_url#https://github.com/}"
-  git -C "$DOTFILES" remote set-url origin "$ssh_url"
-  ok "Switched dotfiles remote to SSH: $ssh_url"
-else
-  ok "Dotfiles remote already uses SSH"
-fi
+run_step "git-remote" switch_dotfiles_remote
 
 # CLAUDE.md template — copy to ~/src/ only if it doesn't exist yet
-if [[ -d "$HOME/src" && ! -f "$HOME/src/CLAUDE.md" ]]; then
-  cp "$DOTFILES/templates/CLAUDE.md" "$HOME/src/CLAUDE.md"
-  ok "CLAUDE.md template copied to ~/src/"
-elif [[ ! -d "$HOME/src" ]]; then
-  warn "~/src/ not found — CLAUDE.md template not copied (run: cp $DOTFILES/templates/CLAUDE.md ~/src/CLAUDE.md)"
+run_step "claude-template" copy_claude_template
+
+echo ""
+if [[ ${#FAILURES[@]} -eq 0 ]]; then
+  echo -e "${GRN}✓ Dotfiles installed successfully!${RST}"
+else
+  echo -e "${YEL}⚠ Installed with ${#FAILURES[@]} failure(s):${RST}"
+  for f in "${FAILURES[@]}"; do
+    echo -e "  ${RED}✗ $f${RST}"
+  done
+  echo ""
+  echo -e "  Fix the issues above and re-run ${CYN}./install.sh${RST}"
 fi
 
 echo ""
-echo -e "${GRN}✓ Dotfiles installed successfully!${RST}"
-echo ""
 echo "  Next steps:"
-echo "  1. Add to ~/.zshrc (before the starship eval):"
-echo "       export NTFY_TOPIC=sabes-que-notificación   # Claude Code notifications"
-echo "  2. Log out and back in so zsh becomes the active shell"
-echo "  3. Launch nvim — lazy.nvim will install plugins on first run"
-echo "  4. Edit ~/src/CLAUDE.md to customize for your projects"
+echo "  1. Log out and back in so zsh becomes the active shell"
+echo "  2. Launch nvim — lazy.nvim will install plugins on first run"
+echo "  3. Edit ~/src/CLAUDE.md to customize for your projects"
 [[ -n "${BACKUP_DIR:-}" && -d "${BACKUP_DIR:-}" ]] && \
   echo "  4. Backups of replaced files: $BACKUP_DIR"
