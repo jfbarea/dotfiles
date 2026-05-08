@@ -35,6 +35,18 @@ opt.splitbelow = true
 
 -- Behavior
 opt.mouse = "a"
+-- OSC 52: works over SSH without X11/Wayland (headless servers, Raspberry Pi)
+vim.g.clipboard = {
+  name = "OSC 52",
+  copy = {
+    ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+    ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+  },
+  paste = {
+    ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+    ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+  },
+}
 opt.clipboard = "unnamedplus"
 opt.updatetime = 250
 opt.timeoutlen = 300

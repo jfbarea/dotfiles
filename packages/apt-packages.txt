@@ -18,6 +18,7 @@ gh
 zoxide
 htop
 tree
+xclip
 
 # Notes — installed from GitHub Releases by install.sh (not in apt or outdated):
 #   neovim    — apt version is typically too old; install.sh fetches latest tarball
