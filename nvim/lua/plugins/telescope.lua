@@ -14,6 +14,7 @@ return {
     require("telescope").setup({
       defaults = {
         file_ignore_patterns = { "node_modules", ".git/", "dist", ".next", "__pycache__", ".venv" },
+        preview = { treesitter = false },
       },
     })
   end,
