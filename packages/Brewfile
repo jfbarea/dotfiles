@@ -12,7 +12,7 @@ brew "starship"
 brew "jq"
 brew "stow"
 brew "node"
-brew "gnu-coreutils"   # gls, gcat, … sin el prefijo g con PATH ajustado
+brew "coreutils"       # gls, gcat, … sin el prefijo g con PATH ajustado
 
 # ── Recommended ───────────────────────────────────────────────────────────────
 brew "fd"              # fast find — lo usa nvim-telescope

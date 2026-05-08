@@ -118,6 +118,8 @@ check "~/.local/bin en PATH"     grep -q '\.local/bin'          "$HOME/.zshrc"
 check "init starship"            grep -q 'starship init'         "$HOME/.zshrc"
 check "init zoxide"              grep -q 'zoxide init'           "$HOME/.zshrc"
 check "NTFY_TOPIC definido"      grep -q 'NTFY_TOPIC'            "$HOME/.zshrc"
+check "~/.tolkien_quotes existe" test -f "$HOME/.tolkien_quotes"
+check "~/.motd.sh existe"        test -f "$HOME/.motd.sh"
 
 # ── 9. Remote del repo de dotfiles ────────────────────────────────────────────
 section "Remote de dotfiles"

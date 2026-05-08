@@ -36,7 +36,7 @@ install_packages_macos() {
     ok "Homebrew already installed"
   fi
   step "Running brew bundle..."
-  brew bundle --file="$DOTFILES/packages/Brewfile" --no-lock
+  brew bundle --file="$DOTFILES/packages/Brewfile"
   ok "Homebrew packages ready"
 }
 
@@ -319,6 +319,15 @@ switch_dotfiles_remote() {
   fi
 }
 
+clear_system_motd() {
+  if [[ -s /etc/motd ]]; then
+    sudo truncate -s 0 /etc/motd
+    ok "System MOTD cleared (/etc/motd)"
+  else
+    ok "System MOTD already empty"
+  fi
+}
+
 copy_claude_template() {
   if [[ -d "$HOME/src" && ! -f "$HOME/src/CLAUDE.md" ]]; then
     cp "$DOTFILES/templates/CLAUDE.md" "$HOME/src/CLAUDE.md"
@@ -355,6 +364,11 @@ run_step "stow:zsh"   safe_stow zsh
 
 # Claude Code (settings.json, hooks/ → $HOME/.claude/)
 run_step "stow:claude" setup_claude
+
+# Clear Debian's default MOTD (replaced by our Tolkien welcome)
+if [[ "$PLATFORM" == "linux" ]]; then
+  run_step "motd" clear_system_motd
+fi
 
 # Switch dotfiles remote from HTTPS to SSH if needed
 run_step "git-remote" switch_dotfiles_remote

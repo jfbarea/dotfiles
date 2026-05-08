@@ -56,3 +56,6 @@ if command -v starship &>/dev/null; then
 fi
 # ── NTFY ──────────────────────────────────────────────────────────────────
 export NTFY_TOPIC=sabes-que-notificacion   # Claude Code notifications
+
+# ── Bienvenida Tolkien (solo en login SSH) ────────────────────────────────
+[[ -n "${SSH_CONNECTION:-}" && -f "$HOME/.motd.sh" ]] && source "$HOME/.motd.sh"
