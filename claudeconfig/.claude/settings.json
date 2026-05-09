@@ -10,7 +10,9 @@
       "Bash(npm list *)",
       "Bash(pnpm lint)",
       "Bash(pnpm typecheck)",
-      "Bash(fuser *)"
+      "Bash(fuser *)",
+      "Write(**/.claude/*)",
+      "Edit(**/.claude/*)"
     ],
     "deny": [
       "Bash(rm -rf /)",
