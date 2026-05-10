@@ -17,6 +17,13 @@
 - macOS (Homebrew) y Linux/Debian/Raspbian (apt + binarios de GitHub Releases).
 - Arquitecturas: x86_64 y aarch64.
 
+## Commits
+
+- Cada commit debe ser atómico: un cambio lógico por commit, ni más ni menos.
+- Si una tarea implica varios cambios independientes (p. ej. nueva feature + fix de bug + docs), usa commits separados.
+- No agrupes en un único commit cosas que no están relacionadas entre sí.
+- No dejes cambios a medias en un commit: el árbol debe compilar y los tests deben pasar en cada punto de la historia.
+
 ## test.sh
 
 Ante cualquier cambio estructural en el repo debes actualizar `test.sh` con los checks correspondientes:
