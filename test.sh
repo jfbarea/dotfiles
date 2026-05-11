@@ -107,6 +107,7 @@ check_symlink "~/.claude/agents/architect.md"  "$HOME/.claude/agents/architect.m
 check_symlink "~/.claude/agents/builder.md"    "$HOME/.claude/agents/builder.md"     "$DOTFILES/claudeconfig/.claude/agents/builder.md"
 check_symlink "~/.claude/agents/reviewer.md"   "$HOME/.claude/agents/reviewer.md"    "$DOTFILES/claudeconfig/.claude/agents/reviewer.md"
 check_symlink "~/.claude/agents/debugger.md"   "$HOME/.claude/agents/debugger.md"    "$DOTFILES/claudeconfig/.claude/agents/debugger.md"
+check_symlink "~/.claude/agents/auditor.md"    "$HOME/.claude/agents/auditor.md"     "$DOTFILES/claudeconfig/.claude/agents/auditor.md"
 check_symlink "~/.claude/commands/scaffold.md"     "$HOME/.claude/commands/scaffold.md"     "$DOTFILES/claudeconfig/.claude/commands/scaffold.md"
 check_symlink "~/.claude/commands/feature.md"      "$HOME/.claude/commands/feature.md"      "$DOTFILES/claudeconfig/.claude/commands/feature.md"
 check_symlink "~/.claude/commands/quick.md"        "$HOME/.claude/commands/quick.md"        "$DOTFILES/claudeconfig/.claude/commands/quick.md"
