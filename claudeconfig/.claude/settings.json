@@ -1,9 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "theme": "dark",
-  "agentPushNotifEnabled": true,
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
       "Bash(*)",
       "Bash(npx tsc --noEmit *)",
@@ -64,7 +61,8 @@
       "Edit(/usr/*)",
       "Edit(/boot/*)",
       "Edit(~/.ssh/*)"
-    ]
+    ],
+    "defaultMode": "acceptEdits"
   },
   "hooks": {
     "Stop": [
@@ -78,5 +76,8 @@
         ]
       }
     ]
-  }
+  },
+  "theme": "dark",
+  "agentPushNotifEnabled": true,
+  "model": "opus"
 }
